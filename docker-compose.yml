@@ -1,0 +1,138 @@
+services:
+  ## --- Ingestion de données (Kafka) ---
+  broker:
+    image: apache/kafka:latest
+    container_name: broker1
+    hostname: broker
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    env_file:
+      - ./kafka.env 
+    networks:
+      - smart-city-net 
+
+  ## --- Data Lake (Hadoop HDFS & YARN) ---
+  namenode:
+    image: apache/hadoop:3.3.6
+    hostname: namenode
+    container_name: namenode11
+    command: ["hdfs", "namenode"]
+    ports:
+      - "9870:9870"
+      - "8020:8020"
+    env_file:
+      - ./hadoop.env
+    environment:
+      ENSURE_NAMENODE_DIR: "/tmp/hadoop-root/dfs/name"
+    volumes:
+      - ./volumes/namenode:/data
+    networks:
+      - smart-city-net 
+
+  datanode1:
+    image: apache/hadoop:3.3.6
+    hostname: datanode
+    container_name: datanode12
+    command: >
+     sh -c "rm -rf /tmp/hadoop-hadoop/dfs/data/* && 
+     hdfs datanode"
+
+    ports:
+      - "9865:9864"
+    env_file:
+      - ./hadoop.env
+    networks:
+      - smart-city-net 
+    
+  datanode2:
+    image: apache/hadoop:3.3.6
+    hostname: datanode
+    container_name: datanode13
+    command: >
+     sh -c "rm -rf /tmp/hadoop-hadoop/dfs/data/* && 
+     hdfs datanode"
+    ports:
+      - "9866:9864"
+    env_file:
+      - ./hadoop.env
+    networks:
+      - smart-city-net 
+  
+  resourcemanager:
+    image: apache/hadoop:3.3.6
+    hostname: resourcemanager
+    container_name: resourcemanager1
+    command: ["yarn", "resourcemanager"]
+    ports:
+      - "8088:8088"
+    env_file:
+      - ./hadoop.env
+    volumes:
+      - ./test.sh:/opt/test.sh
+    networks:
+      - smart-city-net 
+
+  nodemanager:
+    image: apache/hadoop:3.3.6
+    container_name: nodemanager1
+    command: ["yarn", "nodemanager"]
+    env_file:
+      - ./hadoop.env
+    networks:
+      - smart-city-net 
+
+  ## --- Processing (Spark Standalone) ---
+  spark-master:
+    image: spark:latest
+    hostname: spark-master
+    container_name: spark-master-smart-city1
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.master.Master",
+              "--host", "spark-master", "--port", "7077", "--webui-port", "8080"]
+    ports:
+      - "7077:7077"
+      - "8080:8080"
+    depends_on:
+      - namenode
+    networks:
+      - smart-city-net
+
+  spark-worker-1:
+    image: spark:latest
+    hostname: spark-worker-1
+    container_name: spark-worker-1-smart-city1
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker",
+              "spark://spark-master:7077"]
+    
+    
+    depends_on:
+      - spark-master
+    networks:
+      - smart-city-net
+
+  spark-worker-2:
+    image: spark:latest
+    hostname: spark-worker-2
+    container_name: spark-worker-2-smart-city2
+    command: ["/opt/spark/bin/spark-class", "org.apache.spark.deploy.worker.Worker",
+              "spark://spark-master:7077"]
+    depends_on:
+      - spark-master
+    networks:
+      - smart-city-net
+
+
+  dashboard:
+    build: ./serving
+    ports:
+      - "8501:8501"
+    volumes:
+      - ./serving:/app
+    depends_on:
+      - broker
+    networks:
+      - smart-city-net
+
+networks:
+  smart-city-net:
+    driver: bridge

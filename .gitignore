@@ -1,0 +1,21 @@
+# Environnement virtuel Python
+Env/
+Env/
+.Env/
+
+# Variables d'environnement (Sécurité !)
+.env
+*.env
+
+# Docker et Volumes (Données locales)
+volumes/
+.docker/
+
+# Python et fichiers temporaires
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE
+.vscode/
+.idea/
