@@ -1,3 +1,6 @@
 streamlit
-kafka-python
+plotly
 pandas
+kafka-python
+pydeck
+pydeck

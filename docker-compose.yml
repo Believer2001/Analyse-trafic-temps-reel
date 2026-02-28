@@ -94,6 +94,8 @@ services:
       - "8080:8080"
     depends_on:
       - namenode
+    volumes:
+      - ./processing:/opt/spark/work-dir
     networks:
       - smart-city-net
 

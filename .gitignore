@@ -2,7 +2,9 @@
 Env/
 Env/
 .Env/
-
+# jars/
+Jar/
+*.jar
 # Variables d'environnement (Sécurité !)
 .env
 *.env
